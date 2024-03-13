@@ -1,0 +1,998 @@
+Program.Sub.ScreenSU.Start
+Gui.Form..Create
+Gui.Form..Caption("Project Revenue Recognition")
+Gui.Form..Size(15360,10170)
+Gui.Form..MinX(0)
+Gui.Form..MinY(0)
+Gui.Form..Position(0,0)
+Gui.Form..BackColor(-2147483633)
+Gui.Form..MousePointer(0)
+Gui.Form..Event(UnLoad,Form_UnLoad)
+Gui.Form..ContextMenuCreate("grid")
+Gui.Form..ContextMenuAddItem("grid","Ref",0,"Refresh")
+Gui.Form..ContextMenuAddItem("grid","Exp",0,"Export")
+Gui.Form..ContextMenuAddItem("grid","Sel",0,"Filter Selected")
+Gui.Form..ContextMenuSetItemEventHandler("grid","Ref","Refresh_Grid")
+Gui.Form..ContextMenuSetItemEventHandler("grid","Exp","Export_Grid")
+Gui.Form..ContextMenuSetItemEventHandler("grid","Sel","filter_multi")
+Gui.Form.frameHead.Create(Frame)
+Gui.Form.frameHead.Size(15015,885)
+Gui.Form.frameHead.Position(60,45)
+Gui.Form.frameHead.Anchor(13)
+Gui.Form.picLogo.Create(PictureBox)
+Gui.Form.picLogo.Size(2475,630)
+Gui.Form.picLogo.Position(6435,150)
+Gui.Form.picLogo.Parent("frameHead")
+Gui.Form.picLogo.Anchor(1)
+Gui.Form.picLogo.Event(Click,picLogo_Click)
+Gui.Form.txtStartProj.Create(TextBox,"",True,1215,300,0,120,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form.txtStartProj.Parent("frameHead")
+Gui.Form.txtEndProj.Create(TextBox,"",True,1215,300,0,1845,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form.txtEndProj.Parent("frameHead")
+Gui.Form.txtEndProj.Event(KeyPressEnter,txtEndProj_KeyPressEnter)
+Gui.Form.cmdBrwStartProj.Create(Button)
+Gui.Form.cmdBrwStartProj.Size(375,375)
+Gui.Form.cmdBrwStartProj.Position(1380,435)
+Gui.Form.cmdBrwStartProj.Parent("frameHead")
+Gui.Form.cmdBrwStartProj.Caption("^")
+Gui.Form.cmdBrwStartProj.Event(Click,cmdBrwStartProj_Click)
+Gui.Form.cmdBrwEndProj.Create(Button)
+Gui.Form.cmdBrwEndProj.Size(375,375)
+Gui.Form.cmdBrwEndProj.Position(3105,435)
+Gui.Form.cmdBrwEndProj.Parent("frameHead")
+Gui.Form.cmdBrwEndProj.Caption("^")
+Gui.Form.cmdBrwEndProj.Event(Click,cmdBrwEndProj_Click)
+Gui.Form.txtCustomer.Create(TextBox,"",True,1215,300,0,4200,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form.txtCustomer.Parent("frameHead")
+Gui.Form.lbl1.Create(Label,"By Project Range:",True,1680,255,0,885,225,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lbl1.Parent("frameHead")
+Gui.Form.lbl1.FontStyle(True,False,False,False,False)
+Gui.Form.lblCustomer.Create(Label,"By Customer",True,1275,255,0,4155,225,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lblCustomer.Parent("frameHead")
+Gui.Form.lblCustomer.FontStyle(True,False,False,False,False)
+Gui.Form.cmdBrwCustomer.Create(Button)
+Gui.Form.cmdBrwCustomer.Size(375,375)
+Gui.Form.cmdBrwCustomer.Position(5460,435)
+Gui.Form.cmdBrwCustomer.Parent("frameHead")
+Gui.Form.cmdBrwCustomer.Caption("^")
+Gui.Form.cmdBrwCustomer.Event(Click,cmdBrwCustomer_Click)
+Gui.Form.optOpen.Create(Option)
+Gui.Form.optOpen.Size(1575,255)
+Gui.Form.optOpen.Position(13350,165)
+Gui.Form.optOpen.Parent("frameHead")
+Gui.Form.optOpen.Caption("All Open")
+Gui.Form.optOpen.FontStyle(True,False,False,False,False)
+Gui.Form.optOpen.Event(Click,optOpen_Click)
+Gui.Form.optOpen.Anchor(9)
+Gui.Form.optClosed.Create(Option)
+Gui.Form.optClosed.Size(1575,255)
+Gui.Form.optClosed.Position(13350,480)
+Gui.Form.optClosed.Parent("frameHead")
+Gui.Form.optClosed.Caption("All Closed")
+Gui.Form.optClosed.FontStyle(True,False,False,False,False)
+Gui.Form.optClosed.Event(Click,optClosed_Click)
+Gui.Form.optClosed.Anchor(9)
+Gui.Form.ggcProjects.Create(GsGridControl)
+Gui.Form.ggcProjects.Size(15015,8520)
+Gui.Form.ggcProjects.Position(60,1005)
+Gui.Form.ggcProjects.Anchor(15)
+Gui.Form.ggcProjects.Event(RowClick,ggcProjects_RowClick)
+Gui.Form.ggcProjects.Event(CellValueChanged,ggcProjects_CellValueChanged)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+'ARC project 5317
+'uses the sql table from project 4907 as they share data.
+
+'main datatable is built with a single query
+
+'COLUMNS FILLED BY DICTIONARY
+'Estimated Revenue
+'Total Invoiced
+'Est. Cost / Budget
+'GSS Cost
+'OPEN POS
+
+'EXPRESSION COLUMNS
+'GSS Cost + Open POs
+'% Billed
+'Complete by Cost
+'Current Gross Profit QB
+'Current Gross Profit GSS
+'Balance to Bill
+
+'Column #1 = Project #
+'Column #2 = Customer Name
+'Column #3 = Project Description
+'Column #4 = Sales Order Total  (Call the column - Estimated Revenue) (this is on the project management dashboard summary)
+'Column #5 = Progress Billing Total (Call the column ? Total Invoiced) (this is on the project management dashboard summary)
+'Column #6 = The Budget column total on the Project Mgmt Dashboard (Call the Column ? Est. Cost / Budget)
+'Column #7 = QB Cost = A fillable column where I enter a value from another program
+''Column #8 = GSS Cost = Cost total from summary section of Project Management Dashboard
+''Column #9 = Total Open POs (Comes from the Project Management Dashboard Summary Section)
+'Column #10 = Column #8 + Column #9 (Call it ? GSS Cost + Open POs)
+'Column # 11 = % Billed = Progress Billing Total / Sales Order Total  (in the summary section of the Project Management Dashboard)
+'Column #12 = Complete by Cost = (Column #10/Column #6)
+'Column #13 = Current Gross Profit QB = (Column #5-Column #10)/Column #5
+'Column #14 = Current Gross Profit GSS - (Column #5-Column #10)/Column #5 
+'Column #15 = Balance to Bill = Column #4 ? Column #5
+
+'ARC project 5317
+
+'Updated 3/12/2019 by Trey S
+'Modifying to include order amounts from history and all progress billing
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+F.Intrinsic.Control.CallSub(CheckTable)
+
+F.Intrinsic.UI.InvokeWaitDialog("Loading data...", "Project Revenue Status")
+f.Intrinsic.Control.CallSub(checkfiles)
+'set the option for all open projects when loading
+gui.Form.optOpen.Value(1)
+
+f.ODBC.Connection!coredb.OpenCompanyConnection(500)
+'open connection to retrieve data
+f.Intrinsic.Control.CallSub(buildData)
+
+F.Intrinsic.Control.CallSub(create_dictionaries)
+'data retrieved - close connection
+f.ODBC.Connection!coredb.close
+
+f.Intrinsic.Control.CallSub(fill_from_dictionaries)
+
+f.Intrinsic.Control.CallSub(buildGrid)
+
+F.Intrinsic.UI.CloseWaitDialog
+gui.Form..Show
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.cmdBrwStartProj_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sRet.Declare
+
+F.Intrinsic.Control.CallSub(ClearForm)
+
+F.Intrinsic.UI.CommonBrowser(2000,"",V.Local.sRet)
+
+f.Intrinsic.Control.If(v.Local.sRet,<>,v.Ambient.Cancel)
+	f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+	gui.Form.txtStartProj.Text(v.Local.sRet(0))
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdBrwStartProj_Click.End
+
+Program.Sub.cmdBrwEndProj_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sRet.Declare
+v.Local.sFilter.Declare
+
+f.Intrinsic.UI.CommonBrowser(2000,"",v.Local.sRet)
+
+
+f.Intrinsic.Control.If(v.Local.sRet,<>,v.Ambient.Cancel)
+	f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+	gui.Form.txtEndProj.Text(v.Local.sRet(0))
+	f.Intrinsic.Control.If(v.Screen.Form!txtStartProj.TEXT,<>,v.Screen.Form!txtEndProj.TEXT)
+		f.Intrinsic.String.Build("PROJECT >= '{0}' AND PROJECT <= '{1}'",V.Screen.Form!txtStartProj.TEXT,V.Screen.Form!txtEndProj.TEXT,V.Local.sFilter)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("PROJECT = '{0}'",V.Screen.Form!txtStartProj.TEXT,V.Local.sFilter)
+	f.Intrinsic.Control.EndIf
+	F.Data.DataView.SetFilter("PROJECTS","dvPROJECTS",V.Local.sFilter)
+	GUI.Form.ggcProjects.MainView("gvProjects")
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdBrwEndProj_Click.End
+
+Program.Sub.Form_UnLoad.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+F.ODBC.Connection!Con.OpenCompanyConnection(500)
+F.Data.DataTable.SaveToDB("PROJECTS", "Con", "GCG_DOV_PRJREV_CLOSE", "Project", 256, "PROJECT@!@PROJECT*!*CLOSE@!@CLOSED")
+F.ODBC.Connection!Con.Close
+f.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.Form_UnLoad.End
+
+Program.Sub.cmdRefresh_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdRefresh_Click.End
+
+Program.Sub.lblClear_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.lblClear_Click.End
+
+Program.Sub.picLogo_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.picLogo_Click.End
+
+Program.Sub.cmdBrwCustomer_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sRet.Declare
+V.Local.sFilter.Declare
+
+'clear the form first
+f.Intrinsic.Control.CallSub(clearForm)
+
+
+f.Intrinsic.UI.CommonBrowser(205,"",v.Local.sRet)
+f.Intrinsic.Control.If(v.Local.sRet,<>,v.Ambient.cancel)
+	f.Intrinsic.String.Split(v.Local.sRet,"*!*",v.Local.sRet)
+	gui.Form.txtCustomer.Text(v.Local.sRet(0).trim)
+	f.Intrinsic.String.Build("NAME_CUSTOMER = '{0}'",V.Local.sRet(1),V.Local.sFilter)
+	f.Data.DataView.SetFilter("PROJECTS","dvPROJECTS",V.Local.sFilter)
+	GUI.Form.ggcProjects.MainView("gvProjects")
+f.Intrinsic.Control.EndIf
+
+
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cmdBrwCustomer_Click.End
+
+Program.Sub.checkfiles.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sFile.Declare
+v.Local.sDir.Declare
+v.Local.sCustomDir.Declare
+
+'XXX
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.checkfiles.End
+
+Program.Sub.Refresh_Grid.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+F.Intrinsic.UI.InvokeWaitDialog("Loading data...", "Project Revenue Status")
+F.Intrinsic.Control.CallSub(ToggleControls, "Enabled", False)
+gui.Form.ggcProjects.visible(False)
+F.Intrinsic.Control.CallSub(ClearData)
+'open the connection for retrieving data
+f.ODBC.Connection!coredb.OpenCompanyConnection(500)
+f.Intrinsic.Control.CallSub(buildData)
+
+F.Intrinsic.Control.CallSub(create_dictionaries,"REFRESH","TRUE")
+'close connection - all data has been retrieved
+f.ODBC.Connection!coredb.close
+
+f.Intrinsic.Control.CallSub(fill_from_dictionaries)
+
+f.Intrinsic.Control.CallSub(buildGrid)
+gui.Form.ggcProjects.visible(True)
+
+F.Intrinsic.Control.CallSub(ToggleControls, "Enabled", True)
+
+F.Intrinsic.UI.CloseWaitDialog
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.Refresh_Grid.End
+
+Program.Sub.ToggleControls.Start
+GUI.Form.txtCustomer.Enabled(V.Args.Enabled)
+GUI.Form.txtEndProj.Enabled(V.Args.Enabled)
+GUI.Form.txtStartProj.Enabled(V.Args.Enabled)
+GUI.Form.cmdBrwCustomer.Enabled(V.Args.Enabled)
+GUI.Form.cmdBrwEndProj.Enabled(V.Args.Enabled)
+GUI.Form.cmdBrwStartProj.Enabled(V.Args.Enabled)
+GUI.Form.optClosed.Enabled(V.Args.Enabled)
+GUI.Form.optOpen.Enabled(V.Args.Enabled)
+Program.Sub.ToggleControls.End
+
+Program.Sub.Export_Grid.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sDir.Declare
+v.Local.sFile.Declare
+
+f.Intrinsic.String.Build("{0}\Export.xlsx",v.Caller.FilesDir,v.Local.sFile)
+f.Intrinsic.UI.ShowSaveFileDialog(v.Local.sFile,"*.xlsx|*.xlsx",v.Local.sFile)
+
+
+f.Intrinsic.Control.If(v.Local.sFile,<>,v.Ambient.cancel)
+	gui.Form.ggcProjects.Export(v.Local.sFile,"xlsx")
+	f.Intrinsic.Task.ShellExec(0,"OPEN",V.Local.sFile,"","",0)
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.Export_Grid.End
+
+Program.Sub.buildData.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+f.Intrinsic.Control.If(v.Screen.Form!optOpen.Value,=,True)
+	'f.Data.DataTable.CreateFromSQL("PROJECTS","COREDB","select RTRIM(p.project) AS PROJECT, C.NAME_CUSTOMER, P.DESCR from v_project_master p left join v_customer_master c on p.customer = c.customer where p.date_closed = '1900-01-01' and p.project > '' and p.project <> '*TEMPLT'",True)
+	f.Data.DataTable.CreateFromSQL("PROJECTS","COREDB","select RTRIM(p.project) AS PROJECT, C.NAME_CUSTOMER, P.DESCR from v_project_master p left join v_customer_master c on p.customer = c.customer where p.project > '' and p.project <> '*TEMPLT'",True)
+f.Intrinsic.Control.ElseIf(v.Screen.Form!optClosed.Value,=,True)
+	'f.Data.DataTable.CreateFromSQL("PROJECTS","COREDB","select RTRIM(p.project) AS PROJECT, C.NAME_CUSTOMER, P.DESCR from v_project_master p left join v_customer_master c on p.customer = c.customer where p.date_closed <> '1900-01-01' and p.project > '' and p.project <> '*TEMPLT'",True)
+	f.Data.DataTable.CreateFromSQL("PROJECTS","COREDB","select RTRIM(p.project) AS PROJECT, C.NAME_CUSTOMER, P.DESCR from v_project_history p left join v_customer_master c on p.customer = c.customer where p.project > '' and p.project <> '*TEMPLT'",True)
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.buildData.End
+
+Program.Sub.buildGrid.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.sColumns.Declare
+v.Local.iCount.Declare
+
+'now that we have all data, add the expression columns before we start formatting the gridview
+'F.Data.DataTable.AddExpressionColumn("PROJECTS", "PROGRESS_BILL", "FLOAT", "[HIST_PROGRESS_BILL] + [ORIGINAL_PROGRESS_BILL]")
+F.Data.DataTable.AddExpressionColumn("PROJECTS", "PROGRESS_BILL", "FLOAT", "[HIST_PROGRESS_BILL]")
+F.Data.DataTable.AddExpressionColumn("PROJECTS", "EST_REV", "Float", "[EST_REV_OPEN] + [EST_REV_HIST]")
+f.Data.DataTable.AddExpressionColumn("PROJECTS","TOTALCOST","FLOAT","COST + OPEN_POS")
+F.Data.DataTable.AddExpressionColumn("PROJECTS","PERCENT_BILLED","FLOAT","IIF(PROGRESS_BILL > 0 AND EST_REV > 0,PROGRESS_BILL / EST_REV,0)")
+F.Data.DataTable.AddExpressionColumn("PROJECTS","COMP_BY_COST","FLOAT","IIF(BUDGET > 0,TOTALCOST / BUDGET,0)")
+F.Data.DataTable.AddExpressionColumn("PROJECTS","CUR_GP_QB","FLOAT","IIF(PROGRESS_BILL > 0,(PROGRESS_BILL - EXTNL_COST) / PROGRESS_BILL,0)")
+F.Data.DataTable.AddExpressionColumn("PROJECTS","CUR_GP_GSS","FLOAT","IIF(PROGRESS_BILL > 0,(PROGRESS_BILL - TOTALCOST) / PROGRESS_BILL,0)")
+'F.Data.DataTable.AddExpressionColumn("PROJECTS","REMAINING","FLOAT","EST_REV - PROGRESS_BILL")
+F.Data.DataTable.AddExpressionColumn("PROJECTS","REMAINING","FLOAT","[EST_REV_OPEN] - [ORIGINAL_PROGRESS_BILL]")
+
+'create the view and start formatting
+f.Data.DataView.Create("PROJECTS","dvPROJECTS",22)
+GUI.Form.ggcProjects.DataSource("PROJECTS")
+GUI.Form.ggcProjects.AddGridviewFromDataview("gvProjects","PROJECTS","dvPROJECTS")
+
+'visible
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV_OPEN","Visible", False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV_HIST","Visible", False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","ORIGINAL_PROGRESS_BILL","Visible", False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","HIST_PROGRESS_BILL","Visible", False)
+
+
+'captions
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","Caption","Project #")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","Caption","Customer Name")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","Caption","Description")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","Caption","Estimated Revenue")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","Caption","Total Invoiced")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","Caption","Est. Cost / Budget")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","Caption","QB Cost")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","Caption","GSS Cost")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","Caption","Open P.O.s")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","Caption","Total GSS Cost")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","Caption","% Billed")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","Caption","% Complete by Cost")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","Caption","Gross Profit QB")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","Caption","Gross Profit GSS")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","Caption","Balance to Bill")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","Caption","Close out Report")
+
+'read only
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","ReadOnly",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","ReadOnly",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","ReadOnly",False)
+'allow edit
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","AllowEdit",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","AllowEdit",False)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","AllowEdit",True)
+'headerfontbold
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","HeaderFontBold",True)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","HeaderFontBold",True)
+'alignment left or right (near / far)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","HeaderHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","HeaderHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","HeaderHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","HeaderHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","HeaderHAlignment","Center")
+'cell alignment
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","CellHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","CellHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","CellHAlignment","Near")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","CellHAlignment","Far")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","CellHAlignment","Center")
+'column minimum width
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","MinWidth",40)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","MinWidth",40)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","MinWidth",50)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","MinWidth",50)
+'word wrap
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","HeaderWordWrap","Wrap")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Remaining","HeaderWordWrap","Wrap")
+'header back color
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","HeaderBackColor","SILVER")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","HeaderBackColor","SILVER")
+
+'Display format
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","DisplayCustomNumeric","$#,###.00")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","DisplayCustomNumeric","0.00%")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","DisplayCustomNumeric","0.00%")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","DisplayCustomNumeric","0.00%")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","DisplayCustomNumeric","0.00%")
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","DisplayCustomNumeric","$#,###.00")
+
+gui.Form.ggcProjects.SetGridviewProperty("gvProjects","ColumnPanelRowHeight",60)
+
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","EST_REV","TOTAL EST","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","PROGRESS_BILL","TOT PROG","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","BUDGET","TOTAL BUDGET","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","EXTNL_COST","TOTAL QB","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","COST","TOTAL GSS","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","OPEN_POS","TOTAL POS","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","TOTALCOST","GRAND TOT GSS","SUM","","","C")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","PERCENT_BILLED","AVG BILLED","Average","","","0.00%")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","COMP_BY_COST","AVG BY COST","Average","","","0.00%")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","CUR_GP_QB","TOT GP QB","Average","","","0.00%")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","CUR_GP_GSS","TOT GP GSS","Average","","","0.00%")
+gui.Form.ggcProjects.AddSummaryItem("gvProjects","REMAINING","TOT REMAIN","SUM","","","C")
+
+
+gui.Form.ggcProjects.AddStyleFormatCondition("gvProjects","CUR_GP_QB","NEGS","LESS","0")
+gui.Form.ggcProjects.SetStyleFormatConditionProperty("gvProjects","CUR_GP_QB","NEGS","ForeColor","RED")
+gui.Form.ggcProjects.AddStyleFormatCondition("gvProjects","CUR_GP_GSS","GNEGS","LESS","0")
+gui.Form.ggcProjects.SetStyleFormatConditionProperty("gvProjects","CUR_GP_GSS","GNEGS","ForeColor","RED")
+gui.Form.ggcProjects.AddStyleFormatCondition("gvProjects","PERCENT_BILLED","BILL","GREATEROREQUAL","1")
+gui.Form.ggcProjects.SetStyleFormatConditionProperty("gvProjects","PERCENT_BILLED","BILL","BACKCOLOR","MISTYROSE")
+gui.Form.ggcProjects.SetStyleformatConditionProperty("gvProjects","PERCENT_BILLED","BILL","ApplyToRow",True)
+
+gui.Form.ggcProjects.SetGridviewProperty("gvProjects","OptionsViewShowFilterPanelMode","ShowAlways")
+gui.Form.ggcProjects.SetGridviewProperty("gvProjects","OptionsViewShowAutoFilterRow",True)
+gui.Form.ggcProjects.SetGridviewProperty("gvProjects","MultiSelect",True)
+
+
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROJECT","VisibleIndex", 1)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","NAME_CUSTOMER","VisibleIndex", 2)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","DESCR","VisibleIndex", 3)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EST_REV","VisibleIndex", 4)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PROGRESS_BILL","VisibleIndex", 5)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","BUDGET","VisibleIndex", 6)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","EXTNL_COST","VisibleIndex", 7)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COST","VisibleIndex", 8)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","OPEN_POS","VisibleIndex", 9)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","TOTALCOST","VisibleIndex", 10)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","PERCENT_BILLED","VisibleIndex", 11)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","COMP_BY_COST","VisibleIndex", 12)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_QB","VisibleIndex", 13)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","CUR_GP_GSS","VisibleIndex", 14)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","REMAINING","VisibleIndex",15)
+gui.Form.ggcProjects.SetColumnProperty("gvProjects","Close","VisibleIndex", 16)
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.buildGrid.End
+
+Program.Sub.clearForm.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+gui.Form.txtCustomer.Text("")
+gui.Form.txtStartProj.Text("")
+gui.Form.txtEndProj.Text("")
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.clearForm.End
+
+Program.Sub.clearCustomer.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+Gui.Form.txtCustomer.Text("")
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.clearCustomer.End
+
+Program.Sub.cleardata.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+'clear the tables and views
+f.Intrinsic.Control.If(v.DataTable.projects.Exists)
+	f.Data.DataTable.Close("PROJECTS")
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.cleardata.End
+
+Program.Sub.fill_from_dictionaries.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+
+F.Data.DataTable.FillFromDictionary("PROJECTS","REVENUE","PROJECT","EST_REV_OPEN")
+F.Data.DataTable.FillFromDictionary("PROJECTS","REVENUE_HIST","PROJECT","EST_REV_HIST")
+F.Data.DataTable.FillFromDictionary("PROJECTS","PROGRESS","PROJECT","HIST_PROGRESS_BILL")
+F.Data.DataTable.FillFromDictionary("PROJECTS","ORIGINAL_PROGRESS","PROJECT","ORIGINAL_PROGRESS_BILL")
+F.Data.DataTable.FillFromDictionary("PROJECTS","BUDGETS","PROJECT","BUDGET")
+F.Data.DataTable.FillFromDictionary("PROJECTS","GSSCOST","PROJECT","COST")
+F.Data.DataTable.FillFromDictionary("PROJECTS","PURCHASE","PROJECT","OPEN_POS")
+F.Data.Datatable.FillFromDictionary("PROJECTS","EXTERNAL","PROJECT","EXTNL_COST")
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.fill_from_dictionaries.End
+
+Program.Sub.create_dictionaries.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.bExists.Declare
+
+'if this arg exists then dictionaries need to be deleted and recreated.
+f.Intrinsic.Variable.ArgExists("REFRESH",V.Local.bExists)
+f.Intrinsic.Control.If(v.Local.bExists)
+	f.Data.Dictionary.Close("REVENUE")
+	f.Data.Dictionary.Close("PROGRESS")
+	f.Data.Dictionary.Close("BUDGETS")
+	f.Data.Dictionary.Close("GSSCOST")
+	f.Data.Dictionary.Close("PURCHASE")
+	F.Data.Dictionary.Close("EXTERNAL")
+	F.Data.Dictionary.Close("ORIGINAL_PROGRESS")
+	F.Data.Dictionary.Close("REVENUE_HIST")
+f.Intrinsic.Control.EndIf
+
+'Estimated Revenue
+f.Data.DataTable.AddColumn("PROJECTS","EST_REV_OPEN","NUMERIC")
+F.Data.Dictionary.CreateFromSql("REVENUE","COREDB","select RTRIM(B.Project) AS PROJECTKEY, Sum(A.Extension) as Est_Revenue From V_Order_Lines A Right Join V_Order_Header B On A.Order_No=B.Order_No Where b.project > '' and A.line_Type <> 'P' group by project",20)
+F.Data.Dictionary.SetDefaultReturn("REVENUE",0)
+
+''history revenue
+'f.Data.DataTable.AddColumn("PROJECTS","EST_REV_HIST","NUMERIC")
+'F.Data.Dictionary.CreateFromSql("REVENUE_HIST","COREDB","select RTRIM(Project) AS PROJECTKEY, Sum(Extension) as Est_Revenue From V_Order_HIST_LINE group by project",20)
+'F.Data.Dictionary.SetDefaultReturn("REVENUE_HIST",0)
+
+'Total Invoiced
+F.Data.DataTable.AddColumn("PROJECTS","ORIGINAL_PROGRESS_BILL","NUMERIC")
+F.Data.Dictionary.CreateFromSQL("ORIGINAL_PROGRESS","COREDB","select RTRIM(H.Project) AS PROJECTKEY, Sum(L.Extension) as tot_Revenue From V_Order_Hist_Line L right join v_order_header H on L.Order_no = H.Order_no where h.project > '' and line_Type = 'P' group by project",20)
+F.Data.Dictionary.SetDefaultReturn("ORIGINAL_PROGRESS",0)
+
+'F.Data.DataTable.AddColumn("PROJECTS","PROGRESS_BILL","NUMERIC")
+'F.Data.Dictionary.CreateFromSQL("PROGRESS","COREDB","select RTRIM(H.Project) AS PROJECTKEY, Sum(L.Extension) as tot_Revenue From V_Order_Hist_Line L right join v_order_header H on L.Order_no = H.Order_no where h.project > '' and line_Type = 'P' and QTY_ORDERED > 0 group by project",20)
+'F.Data.Dictionary.SetDefaultReturn("PROGRESS",0)
+
+'Est. Cost / Budget
+f.Data.DataTable.AddColumn("PROJECTS","BUDGET","NUMERIC")
+F.Data.Dictionary.CreateFromSQL("BUDGETS","COREDB","select RTRIM(j.project) AS PROJECTKEY, if (sum(c.budget) >= 0, sum(c.budget),0) as budget from gcg_4907_budget c left join v_job_header j on c.job = j.job and c.suffix = j.suffix where j.project > '' group by project",20)
+F.Data.Dictionary.SetDefaultReturn("BUDGETS",0)
+
+'GSS Cost
+F.Data.DataTable.AddColumn("PROJECTS","COST","NUMERIC")
+'F.Data.Dictionary.CreateFromSQL("GSSCOST","COREDB","select RTRIM(h.project) AS PROJECTKEY, sum(d.amount_labor + d.amt_overhead + d.amt_standard) as total_cost from v_job_header h left join v_job_detail d on h.job = d.job and h.suffix = d.suffix where h.project > '' group by project",20)
+
+f.Data.Dictionary.CreateFromSQL("GSSCOST","COREDB","select RTRIM(h.project) AS PROJECTKEY, sum(d.amount_labor + d.amt_overhead + d.amt_standard) as total_cost from v_job_header h left join v_job_detail d on h.job = d.job and h.suffix = d.suffix left join v_job_operations jo on d.job = jo.job and d.suffix = jo.suffix and d.seq = jo.seq left join v_project_group pg on jo.proj_group = pg.f_group where h.project <> '' and d.lmo <> 'Z' and d.seq < '990000' and pg.excl_group <> 'Y' group by PROJECTKEY",20)
+F.Data.Dictionary.SetDefaultReturn("GSSCOST",0)
+
+'external cost monitored by user -  manual input
+f.Data.DataTable.AddColumn("PROJECTS","EXTNL_COST","NUMERIC")
+F.Data.Dictionary.CreateFromSQL("EXTERNAL","COREDB","SELECT RTRIM(PROJECT) AS PROJECTKEY, BUDGET FROM GCG_5317_PROJ_BUDGET",20)
+F.Data.Dictionary.SetDefaultReturn("EXTERNAL",0)
+
+'OPEN POS
+F.Data.DataTable.AddColumn("PROJECTS","OPEN_POS","NUMERIC")
+F.Data.Dictionary.CreateFromSQL("PURCHASE","COREDB","select  RTRIM(j.project) AS PROJECTKEY, sum(IF(P.QTY_ORDER - P.QTY_RECEIVED > 0,((P.QTY_ORDER - P.QTY_RECEIVED)*P.COST),0.00)) as open_pos from v_job_header j left join v_po_lines p on j.job = p.job and j.suffix = p.suffix where j.project > '' and p.flag_recv_close <> 'Y' group by project",20)
+F.Data.Dictionary.SetDefaultReturn("PURCHASE",0)
+
+F.Data.DataTable.AddColumn("PROJECTS", "Close", "Boolean", False)
+F.Data.Dictionary.CreateFromSQL("dictClosed", "COREDB", "select RTRIM(PROJECT) as PROJECT, Closed from GCG_DOV_PRJREV_CLOSE")
+F.Data.Dictionary.SetDefaultReturn("dictClosed", False)
+F.Data.DataTable.FillFromDictionary("PROJECTS", "dictClosed", "Project", "Close")
+F.Data.Dictionary.Close("dictClosed")
+
+F.Intrinsic.Control.CallSub(LoadHistRevenue)
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.create_dictionaries.End
+
+Program.Sub.LoadHistRevenue.Start
+V.Local.sProjects.Declare(String)
+V.Local.sSQL.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.iCounter.Declare(Long)
+V.Local.fSum.Declare(Float)
+
+F.Data.DataView.Create("PROJECTS", "dvPROJECTSTemp", 22)
+F.Data.DataView.ToString("PROJECTS", "dvPROJECTSTemp", "PROJECT", "!", ",", V.Local.sProjects)
+'F.Data.DataView.ToString("PROJECTS", "dvPROJECTSTemp", "PROJECT", "!", "','", V.Local.sProjects)
+
+F.Intrinsic.String.Split(V.Local.sProjects, ",", V.Local.sProjects)
+
+f.Data.DataTable.AddColumn("PROJECTS","EST_REV_HIST","NUMERIC")
+F.Data.DataTable.AddColumn("PROJECTS","HIST_PROGRESS_BILL","NUMERIC")
+F.Data.Dictionary.Create("REVENUE_HIST")
+F.Data.Dictionary.Create("PROGRESS")
+
+F.Intrinsic.Control.For(V.Local.iCounter, 0, V.Local.sProjects.UBound, 1)
+	F.Intrinsic.String.Build("select Sum(Extension) From V_Order_HIST_Line  Where Order_no in (Select distinct Order_no from V_Order_HIST_Head Where project = '{0}' ) and line_Type <> 'P'", V.Local.sProjects(V.Local.iCounter).Trim, V.Local.sSQL)
+	F.ODBC.Connection!coredb.ExecuteAndReturn(V.Local.sSQL, V.Local.fSum)
+	F.Intrinsic.Control.If(V.Ambient.ExecuteAndReturnEOF)
+		V.Local.fSum.Set(0)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.Local.fSum, !=, 0)
+		F.Data.Dictionary.AddItem("REVENUE_HIST", V.Local.sProjects(V.Local.iCounter).Trim, V.Local.fSum)
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.String.Build("select Sum(Extension) From V_Order_HIST_Line  Where Order_no in (Select distinct Order_no from V_Order_HIST_Head Where project = '{0}' ) and line_Type = 'P' and QTY_ORDERED > 0", V.Local.sProjects(V.Local.iCounter).Trim, V.Local.sSQL)
+	F.ODBC.Connection!coredb.ExecuteAndReturn(V.Local.sSQL, V.Local.fSum)
+	F.Intrinsic.Control.If(V.Ambient.ExecuteAndReturnEOF)
+		V.Local.fSum.Set(0)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.Local.fSum, !=, 0)
+		F.Data.Dictionary.AddItem("PROGRESS", V.Local.sProjects(V.Local.iCounter).Trim, V.Local.fSum)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Next(V.Local.iCounter)
+
+F.Data.DataView.Close("PROJECTS", "dvPROJECTSTemp")
+F.Data.Dictionary.SetDefaultReturn("REVENUE_HIST", 0)
+F.Data.Dictionary.SetDefaultReturn("PROGRESS", 0)
+Program.Sub.LoadHistRevenue.End
+
+Program.Sub.catching.Start
+v.Local.sError.declare(string)
+F.Intrinsic.String.Build("Project: {0}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}","GCG_5317_pm_rerec.g2u",V.Ambient.NewLine,v.Args.sub,V.Args.errorno,V.args.errordesc,V.Local.sError)
+f.Intrinsic.UI.Msgbox(v.Local.sError)
+F.Intrinsic.Control.CallSub(FORM_UNLOAD)
+Program.Sub.catching.End
+
+Program.Sub.ggcProjects_RowClick.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare
+v.Local.iX.Declare
+v.Local.iY.Declare
+
+'clear the tables and views
+f.Intrinsic.Control.If(v.Args.BUTTON,=,"Right")
+	F.Intrinsic.API.GetMousePosition(V.Local.iX,v.Local.iY)
+	gui.Form..ContextMenuShow("GRID",v.Local.iX,v.Local.iY)
+f.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.ggcProjects_RowClick.End
+
+Program.Sub.optClosed_Click.Start
+f.Intrinsic.Control.Try
+v.Local.serror.Declare
+f.Intrinsic.Control.BlockEvents
+
+'clear the form data first
+f.Intrinsic.Control.CallSub(clearform)
+'set which option is true
+gui.Form.optClosed.Value(True)
+gui.Form.optOpen.Value(False)
+'refresh the data based on the true option
+f.Intrinsic.Control.CallSub(refresh_grid)
+
+f.Intrinsic.Control.UnBlockEvents
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.optClosed_Click.End
+
+Program.Sub.optOpen_Click.Start
+f.Intrinsic.Control.Try
+v.Local.serror.Declare
+f.Intrinsic.Control.BlockEvents
+'clear the form data first
+f.Intrinsic.Control.CallSub(clearform)
+'set which option is true
+gui.Form.optOpen.Value(True)
+gui.Form.optClosed.Value(False)
+'refresh the data based on the true option
+f.Intrinsic.Control.CallSub(refresh_grid)
+
+f.Intrinsic.Control.UnBlockEvents
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.optOpen_Click.End
+
+Program.Sub.ggcProjects_CellValueChanged.Start
+f.Intrinsic.Control.Try
+v.Local.serror.Declare
+v.Local.sSql.Declare
+
+f.Intrinsic.Control.If(v.Args.column,=,"EXTNL_COST")
+	f.ODBC.Connection!coredb.OpenCompanyConnection(500)
+	
+	f.Intrinsic.String.Build("SELECT PROJECT, BUDGET, DATE_CHANGE FROM GCG_5317_PROJ_BUDGET WHERE PROJECT = '{0}'",V.DataTable.PROJECTS(V.Args.RowIndex).PROJECT!FIELDVALTRIM,v.Local.sSql)
+	f.ODBC.Connection!coredb.openlocalrecordsetRW("budget",v.Local.sSql)
+	
+	f.Intrinsic.Control.If(v.ODBC.coredb!budget.EOF,=,False)
+		f.ODBC.coredb!budget.MoveFirst
+		F.ODBC.coredb!budget.Set!BUDGET(V.DataTable.PROJECTS(V.Args.ROWINDEX).EXTNL_COST!FIELDVAL)
+		F.ODBC.coredb!budget.Set!DATE_CHANGE(V.Ambient.Date.PSQLFriendly)
+		F.ODBC.coredb!budget.Update
+	f.Intrinsic.Control.Else
+		f.ODBC.coredb!budget.AddNew
+		f.ODBC.coredb!budget.Set!PROJECT(V.DataTable.PROJECTS(V.Args.ROWINDEX).PROJECT!FIELDVALTRIM)
+		F.ODBC.coredb!budget.Set!BUDGET(V.DataTable.PROJECTS(V.Args.ROWINDEX).EXTNL_COST!FIELDVAL)
+		F.ODBC.coredb!budget.Set!DATE_CHANGE(V.Ambient.Date.PSQLFriendly)
+		F.ODBC.coredb!budget.Update	
+	f.Intrinsic.Control.EndIf
+	
+	F.ODBC.coredb!budget.Close
+	f.ODBC.Connection!coredb.Close
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.ggcProjects_CellValueChanged.End
+
+Program.Sub.txtEndProj_KeyPressEnter.Start
+f.Intrinsic.Control.Try
+v.Local.serror.Declare
+v.Local.sFilter.Declare
+
+	f.Intrinsic.Control.If(v.Screen.Form!txtStartProj.TEXT,<>,v.Screen.Form!txtEndProj.TEXT)
+		f.Intrinsic.String.Build("PROJECT >= '{0}' AND PROJECT <= '{1}'",V.Screen.Form!txtStartProj.TEXT,V.Screen.Form!txtEndProj.TEXT,V.Local.sFilter)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("PROJECT = '{0}'",V.Screen.Form!txtStartProj.TEXT,V.Local.sFilter)
+	f.Intrinsic.Control.EndIf
+	F.Data.DataView.SetFilter("PROJECTS","dvPROJECTS",V.Local.sFilter)
+	GUI.Form.ggcProjects.MainView("gvProjects")
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.txtEndProj_KeyPressEnter.End
+
+Program.Sub.filter_multi.Start
+f.Intrinsic.Control.Try
+v.Local.serror.Declare
+v.Local.sFilter.Declare
+v.Local.sLines.Declare
+v.Local.iCount.Declare
+
+
+Gui.Form.ggcProjects.GetSelectedRows("gvProjects",v.Local.sLines)
+f.Intrinsic.String.Split(v.Local.sLines,"*!*",v.Local.sLines)
+f.Intrinsic.Control.For(v.Local.iCount,0,v.Local.sLines.UBound,1)
+	f.Intrinsic.Control.If(v.Local.iCount,=,0)
+		f.Intrinsic.String.Build("PROJECT = '{0}'",V.DataTable.PROJECTS(V.Local.sLines(V.Local.iCount)).PROJECT!FIELDVALTRIM,V.Local.sFilter)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("{0} OR PROJECT = '{1}'",V.Local.sFilter,V.DataTable.PROJECTS(V.Local.sLines(V.Local.iCount)).PROJECT!FIELDVALTRIM,V.Local.sFilter)
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.Next(v.Local.iCount)
+
+F.Data.DataView.SetFilter("PROJECTS","dvPROJECTS",V.Local.sFilter)
+gui.Form.ggcProjects.MainView("gvProjects")
+
+
+
+
+
+
+F.Intrinsic.Control.ExitSub
+
+f.Intrinsic.Control.catch
+f.Intrinsic.Control.CallSub(catching,"sub",v.Ambient.CurrentSubroutine,"errorno",v.Ambient.ErrorNumber,"errordesc",v.Ambient.ErrorDescription)
+f.Intrinsic.Control.EndTry
+Program.Sub.filter_multi.End
+
+Program.Sub.CheckTable.Start
+V.Local.bExists.Declare(Boolean)
+
+F.ODBC.Connection!Con.OpenCompanyConnection
+
+F.ODBC.Connection!Con.TableExists("GCG_DOV_PRJREV_CLOSE", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.ODBC.Connection!Con.Execute("CREATE TABLE GCG_DOV_PRJREV_CLOSE (PROJECT CHAR(20), CLOSED BIT NOT NULL );")
+F.Intrinsic.Control.EndIf
+
+F.ODBC.Connection!Con.TableExists("GCG_4907_Budget", V.Local.bExists)
+ F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.ODBC.Connection!Con.Execute("CREATE TABLE GCG_4907_Budget (Job CHAR(6) NOT NULL, Suffix CHAR(3) NOT NULL, Budget NUMERIC(14,2), Qty_Shipped NUMERIC(14,2), Shipping_Notes CHAR(150) );")
+F.Intrinsic.Control.EndIf
+
+F.ODBC.Connection!Con.TableExists("GCG_5317_PROJ_BUDGET", V.Local.bExists)
+ F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.ODBC.Connection!Con.Execute("CREATE TABLE GCG_5317_PROJ_BUDGET (PROJECT CHAR(7),BUDGET NUMERIC(12,2),DATE_CHANGE DATE );")
+F.Intrinsic.Control.EndIf
+
+ F.ODBC.Connection!Con.Close
+Program.Sub.CheckTable.End
